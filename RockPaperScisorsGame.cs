@@ -6,36 +6,38 @@ using System.Threading.Tasks;
 
 namespace RockPaperScissors
 {
-    class RockPaperScisorsGame
+    class RockPaperScissorsGame
     {
         private Random rng;
         private int wins;
         private int losses;
         private int ties;
+        private List<GameOptions> gameOptions;
 
-        
-        public List<string> SetUpGameOptions(List<string> list)
+        public void SetUpGameOptions()
         {
-            list.Add("Rock");
-            list.Add("Paper");
-            list.Add("Scisors");
-            list.Add("Quit");
-            return list;
+            List<GameOptions> gameOptions = new List<GameOptions>();
+            foreach (GameOptions option in Enum.GetValues(typeof(GameOptions))){
+                gameOptions.Add(option);
+            }
+
+            this.gameOptions = gameOptions;
         }
 
 
-        public RockPaperScisorsGame()
+        public RockPaperScissorsGame()
         {
             rng = new Random();
+            SetUpGameOptions();
         }
 
         public void Play()
         {
-            string userChoice = PromptUser();
-            string computerChoice;
+            GameOptions userChoice = PromptUser();
+            GameOptions computerChoice;
             int score;
 
-            while(userChoice.ToLower() != "quit")
+            while(userChoice != GameOptions.Quit)
             {
                 computerChoice = ComputerChoice();
                 score = GetScore(computerChoice, userChoice);
@@ -43,19 +45,27 @@ namespace RockPaperScissors
                 ReturnScore();
 
                 userChoice = PromptUser();
-                
+                if (userChoice == GameOptions.Reset)
+                {
+                    wins = 0; losses = 0; ties = 0;
+                    userChoice = PromptUser();
+                }
             }
             ReturnScore();
+            log("Press enter to continue...");
+            Console.ReadLine();
         }
 
-        private int GetScore(string computer, string user)
+        private int GetScore(GameOptions computer, GameOptions user)
         {
-            if(computer.ToLower() == user.ToLower())
+            if(computer == user)
             {
                 ties++;
                 return ties;
             }
-            else if(computer.ToLower() == "rock" && user.ToLower() == "paper" || computer.ToLower() == "scisors" && user.ToLower() == "rock" || computer.ToLower() == "paper" && user.ToLower() == "scisors")
+            else if(computer == GameOptions.Rock && user == GameOptions.Paper || 
+                    computer == GameOptions.Scissors && user == GameOptions.Rock || 
+                    computer == GameOptions.Paper && user == GameOptions.Scissors)
             {
                 wins++;
                 return wins;
@@ -67,63 +77,67 @@ namespace RockPaperScissors
             }
         }
 
-        private string ComputerChoice()
+        private GameOptions ComputerChoice()
         {
-            int computer = rng.Next(1, 4);
-
-            if (computer == 1)
-            {
-                return "Rock";
-            }
-            else if (computer == 2)
-            {
-                return "Paper";
-            }
-            else
-            {
-                return "Scisors";
-            }
+            int computer = rng.Next((int)GameOptions.Rock, (int)GameOptions.Scissors + 1);
+            GameOptions option = (GameOptions)computer;
+            return option;
         }
 
-        private string PromptUser()
+        private GameOptions PromptUser()
         {
-            List<string> gameOptions = new List<string>();
-            SetUpGameOptions(gameOptions);
-            log("Welcome to Rock, Paper or Scisors");
-            log("\nPlease select one of the options: ");
+                     
+            log("Welcome to Rock, Paper or Scissors\n");
+            log("Please select one of the options: ");
 
             Console.ForegroundColor = ConsoleColor.Green;
-            foreach (string opt in gameOptions)
+            foreach (GameOptions option in gameOptions)
             {
-                log(opt);
+                log($"{Enum.GetName(typeof(GameOptions),option)} ({(int)option})");
             }
             Console.ResetColor();
 
             string userChoice = Console.ReadLine();
+            GameOptions useroption;
 
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            switch (userChoice.ToLower())
+            if (Enum.TryParse(userChoice, out useroption))
             {
-                case "rock":
-                    log("\nYou chose Rock");
-                    break;
-                case "paper":
-                    log("You chose Paper");
-                    break;
-                case "scisors":
-                    log("You chose Scisors");
-                    break;
-                case "quit":
+                log($"You chose {useroption}");
+                if(useroption == GameOptions.Quit)
+                {
                     log("Thanks for playing!");
-                    break;
-                default:
-                    Console.ResetColor();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    log("That is an invalid choice:");
-                    break;
+                }
             }
-            Console.ResetColor();
-            return userChoice;
+            else
+            {
+                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Red;
+                log("That is an invalid choice:");
+            }
+
+            //Console.ForegroundColor = ConsoleColor.Magenta;
+            //switch (Char.ToLowerInvariant(userChoice[0]))
+            //{
+            //    case 'r':
+            //        log("\nYou chose Rock");
+            //        break;
+            //    case 'p':
+            //        log("You chose Paper");
+            //        break;
+            //    case 's':
+            //        log("You chose Scissors");
+            //        break;
+            //    case 'q':
+            //        log("Thanks for playing!");
+            //        break;
+            //    default:
+            //        Console.ResetColor();
+            //        Console.ForegroundColor = ConsoleColor.Red;
+            //        log("That is an invalid choice:");
+            //        break;
+            //}
+            //Console.ResetColor();
+            return useroption;
         }
 
         private void ReturnScore()
@@ -138,10 +152,22 @@ namespace RockPaperScissors
             Console.ResetColor();
         }
 
-        public void log(string input)
+        public void log(object input)
         {
-            Console.WriteLine(input);
+            Console.WriteLine(input.ToString());
+        }
+
+        private enum GameOptions
+        {
+            Rock = 1,
+            Paper,
+            Scissors,
+            Quit,
+            Reset
         }
     }
+
+
+    
 
 }
